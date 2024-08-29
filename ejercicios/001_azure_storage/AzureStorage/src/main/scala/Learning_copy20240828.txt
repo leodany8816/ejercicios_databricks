@@ -1,0 +1,31 @@
+import java.io.FileInputStream
+import java.util.Properties
+object Learning {
+  /**
+   *
+   * @param args
+   */
+
+  def main(args: Array[String]): Unit = {
+    assert(args.nonEmpty, "Debes de proporcionar una ruta para el archivo de configuracion")
+
+    println("Hello world!")
+    println(s"Se utilizara un archivo de configuracion ${args.head}")
+
+    val archivo = new FileInputStream(args.head)
+    val properties = new Properties()
+    properties.load(archivo)
+
+    println(properties.getProperty("contenedor"))
+
+    println(
+      s"""
+         | Se realiara el proceso de carga de archivo en el contenedor ${properties.getProperty("contenedor")}
+         | y se registrara cada carga en la tabla ${properties.getProperty("nombreTablaAzure")}
+         |""".stripMargin)
+
+
+
+  }
+}
+
