@@ -8,3 +8,6 @@ lazy val root = (project in file("."))
   )
 
 libraryDependencies += "org.scalatest" %% "scalatest-funsuite" % "3.2.15" % "test"
+libraryDependencies += "com.typesafe" % "config" % "1.4.2"
+libraryDependencies += "com.azure" % "azure-storage-blob" % "12.17.0"
+libraryDependencies += "com.google.code.gson" % "gson" % "2.10.1"
