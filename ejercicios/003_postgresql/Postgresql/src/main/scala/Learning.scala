@@ -16,15 +16,14 @@ object Learning {
   /** Complete o modifique las secciones de código según sea necesario. */
 
   /** La variable `db` es usada para la creación de un cliente de base de datos
-    * para comunicarse con Postgresql. Recuerde usar esta forma para enviar
-    * url, usuario y contraseña de manera separada para alinearse a los lineamientos
-    * existentes dados por varios clientes.
-    *
-    * Use un archivo de configuración para leer estos valores.
-    */
+   * para comunicarse con Postgresql. Recuerde usar esta forma para enviar
+   * url, usuario y contraseña de manera separada para alinearse a los lineamientos
+   * existentes dados por varios clientes.
+   *
+   * Use un archivo de configuración para leer estos valores.
+   */
 
   def main(args: Array[String]): Unit = {
-
 
 
     val config: Config = ConfigFactory.parseResources("conexion.conf")
@@ -45,24 +44,16 @@ object Learning {
 
     //insertaRegistros(db)
 
+    //actualizaRegistro("17ab385a-774d-4f7c-8d22-7050dfcaef63", db)
+
+    //eliminaRegistros("2", db)
+
     consultaRegistros(db)
-
-
-
-
-
-
-//    val setup = db.run(DBIO.seq(
-//      schema.createIfNotExists
-//    ))
-
-//    val setupFuture = db.run(setup)
-//    Await.result(setupFuture, 10.seconds)
 
   }
 
   /** Complete esta función para crear las tablas definidas */
-  def crearTablas(db:Database): Unit = {
+  def crearTablas(db: Database): Unit = {
     println("Entra para crear la tabla")
     val proCrontol = TableQuery[ProcesoControlTable]
     try {
@@ -87,12 +78,12 @@ object Learning {
   }
 
   /** Complete esta función para insertar los registros especificados */
-  def insertaRegistros(db:Database): Unit = {
+  def insertaRegistros(db: Database): Unit = {
     println("Insertar registros")
     val proControl = TableQuery[ProcesoControlTable]
     val uuid: String = UUID.randomUUID().toString
     println(s"Identificador unico ${uuid}")
-    try{
+    try {
       // Definir los registros a insertar
       val insertActions = DBIO.seq(
         proControl += ProcesoControl(0, Timestamp.valueOf(LocalDateTime.now()), uuid, true, "test1.txt"),
@@ -105,30 +96,30 @@ object Learning {
         case Failure(e) => println(s"Error al insertar registros: ${e.getMessage}")
       }
 
-    }catch {
+    } catch {
       case e: Exception =>
         println(s"Error al insertar el registro en la tabla: ${e.getMessage}")
     }
   }
 
   /** Complete esta función para obtener los registros de la tabla [[Table]] */
-  def consultaRegistros(db:Database): Unit = {
+  def consultaRegistros(db: Database): Unit = {
     println("Consultar registros")
     val proControl = TableQuery[ProcesoControlTable]
     try {
-    val query = proControl.result
+      val query = proControl.result
 
-    val result = db.run(query)
+      val result = db.run(query)
 
-    result.onComplete {
-      case Success(registros) =>
-        println("Registros en la tabla:")
-        registros.foreach { registro =>
-          println(s"ID: ${registro.id}, Fecha: ${registro.fechaActualizacion}, Identificador: ${registro.identificador}, Carga Correcta: ${registro.cargaCorrecta}, Archivo: ${registro.nombreArchivo}")
-        }
-      case Failure(e) =>
-        println(s"Error al consultar registros: ${e.getMessage}")
-    }
+      result.onComplete {
+        case Success(registros) =>
+          println("Registros en la tabla:")
+          registros.foreach { registro =>
+            println(s"ID: ${registro.id}, Fecha: ${registro.fechaActualizacion}, Identificador: ${registro.identificador}, Carga Correcta: ${registro.cargaCorrecta}, Archivo: ${registro.nombreArchivo}")
+          }
+        case Failure(e) =>
+          println(s"Error al consultar registros: ${e.getMessage}")
+      }
       Await.result(result, 10.seconds)
 
     } catch {
@@ -138,11 +129,40 @@ object Learning {
   }
 
   /** Complete esta función para actualizar los registros insertados */
-  def actualizaRegistro(nombreArchivo: String, cargaCorrecta: Boolean): Unit =
-    ???
+  def actualizaRegistro(identificador: String, db: Database): Unit = {
+    println("Entrar a actualizar registro")
+    println(s"valor ${identificador}")
+    val proControl = TableQuery[ProcesoControlTable]
+    val query = proControl
+      .filter(_.identificador === identificador)
+      .map(_.cargaCorrecta)
+      .update(false)
+
+    try {
+      val result = Await.result(db.run(query), 10.seconds)
+      println(s"Filas afectadas: $result")
+    } finally {
+      db.close()
+    }
+  }
 
   /** Complete esta función para eliminar registros */
-  def eliminaRegistros() = ???
+  def eliminaRegistros(identificador: String, db: Database): Unit = {
+    println("Eliminar registros")
+    val proControl = TableQuery[ProcesoControlTable]
+    val query = proControl.filter(_.identificador === identificador).delete
+
+    try{
+      val result = Await.result(db.run(query), 10.seconds)
+      println(s"Registros eliminados: $result")
+    }catch {
+      case e: Exception =>
+        println(s"Error al eliminar el registro: ${e.getMessage}")
+    }finally {
+      db.close()
+    }
+  }
+
 }
 
 case class ProcesoControl(id: Int, fechaActualizacion: Timestamp, identificador: String, cargaCorrecta: Boolean, nombreArchivo: String)
